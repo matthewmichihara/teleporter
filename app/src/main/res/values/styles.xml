@@ -1,0 +1,12 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+        <item name="android:textAppearanceListItemSmall">@style/TextAppearance.Teleporter</item>
+    </style>
+
+    <style name="TextAppearance.Teleporter" parent="android:TextAppearance.Small">
+        <item name="android:textColor">?android:textColorPrimaryInverse</item>
+    </style>
+
+</resources>

@@ -1,0 +1,40 @@
+apply plugin: 'com.android.application'
+apply plugin: 'android-apt'
+apply plugin: 'retrolambda'
+
+android {
+    compileSdkVersion 20
+    buildToolsVersion "20"
+
+    defaultConfig {
+        applicationId "com.fourpool.teleporter.app"
+        minSdkVersion 17
+        targetSdkVersion 20
+        versionCode 1
+        versionName "1.0"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions {
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
+    }
+}
+
+dependencies {
+    apt 'com.github.frankiesardo:auto-parcel-processor:0.2'
+    compile 'com.android.support:support-annotations:20.0.0'
+    compile 'com.android.support:support-v4:20.0.0'
+    compile 'com.github.frankiesardo:auto-parcel:0.2'
+    compile 'com.google.android.gms:play-services:5.2.08'
+    compile 'com.google.code.gson:gson:2.3'
+    compile 'com.jakewharton:butterknife:5.1.2'
+    compile 'com.netflix.rxjava:rxjava-android:0.20.5'
+    compile 'com.netflix.rxjava:rxjava-core:0.20.5'
+    compile 'com.squareup.dagger:dagger:1.2.2'
+    compile 'com.squareup.dagger:dagger-compiler:1.2.2'
+    compile 'com.squareup.retrofit:retrofit:1.5.1'
+}

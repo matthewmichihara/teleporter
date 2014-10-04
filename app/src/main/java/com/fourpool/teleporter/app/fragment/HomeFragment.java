@@ -1,11 +1,12 @@
 package com.fourpool.teleporter.app.fragment;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -15,7 +16,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
-import android.widget.Toast;
 
 import com.fourpool.teleporter.app.MainActivity;
 import com.fourpool.teleporter.app.R;
@@ -27,10 +27,7 @@ import com.fourpool.teleporter.app.data.google.AutoCompleteResponse;
 import com.fourpool.teleporter.app.data.google.GooglePlacesService;
 import com.fourpool.teleporter.app.data.google.Prediction;
 import com.fourpool.teleporter.app.rx.Helper;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationClient;
+import com.fourpool.teleporter.app.service.MockLocationService;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -53,7 +50,7 @@ import static rx.Observable.merge;
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 import static rx.schedulers.Schedulers.io;
 
-public class HomeFragment extends Fragment implements GooglePlayServicesClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class HomeFragment extends Fragment {
     @InjectView(R.id.map) MapView mapView;
     @InjectView(R.id.search) AutoCompleteTextView searchView;
 
@@ -62,8 +59,6 @@ public class HomeFragment extends Fragment implements GooglePlayServicesClient.C
     Observable<TeleporterLocation> locationChosenFromDrawerStream;
 
     private final PublishSubject<Long> saveButtonClickStream = PublishSubject.create();
-    private LocationClient locationClient;
-
 
     public static HomeFragment newInstance() {
         return new HomeFragment();
@@ -87,14 +82,12 @@ public class HomeFragment extends Fragment implements GooglePlayServicesClient.C
         app.inject(this);
 
         setHasOptionsMenu(true);
-
-        locationClient = new LocationClient(getActivity(), this, this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        final View view = inflater.inflate(R.layout.fragment_home, container, false);
         ButterKnife.inject(this, view);
 
         final GoogleMap map = initMap(getActivity(), mapView, savedInstanceState);
@@ -114,7 +107,7 @@ public class HomeFragment extends Fragment implements GooglePlayServicesClient.C
                             double lat = detailsResponse.result().geometry().location().lat();
                             double lng = detailsResponse.result().geometry().location().lng();
 
-                            return new TeleporterLocation(name, lat, lng);
+                            return TeleporterLocation.of(name, lat, lng);
                         }));
 
         final Observable<TeleporterLocation> mockLocationStream = merge(locationChosenFromDrawerStream, locationChosenFromSearchStream);
@@ -130,8 +123,8 @@ public class HomeFragment extends Fragment implements GooglePlayServicesClient.C
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .subscribe(teleporterLocation -> {
-                    double lat = teleporterLocation.getLat();
-                    double lng = teleporterLocation.getLng();
+                    double lat = teleporterLocation.lat();
+                    double lng = teleporterLocation.lng();
 
                     LatLng latLng = new LatLng(lat, lng);
                     CameraPosition cameraPosition = new CameraPosition.Builder()
@@ -146,13 +139,11 @@ public class HomeFragment extends Fragment implements GooglePlayServicesClient.C
                     location.setTime(System.currentTimeMillis());
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
 
-                    try {
-                        locationClient.setMockLocation(location);
-                    } catch (SecurityException e) {
-                        Toast.makeText(getActivity(), "Enable mock locations in developer settings", Toast.LENGTH_SHORT).show();
-                    }
+                    Intent intent = new Intent(getActivity(), MockLocationService.class);
+                    intent.putExtra(MockLocationService.EXTRA_MOCK_LOCATION, teleporterLocation);
+                    getActivity().startService(intent);
 
-                    map.addMarker(new MarkerOptions().position(latLng).title(teleporterLocation.getName()));
+                    map.addMarker(new MarkerOptions().position(latLng).title(teleporterLocation.name()));
                     map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                 });
 
@@ -168,6 +159,7 @@ public class HomeFragment extends Fragment implements GooglePlayServicesClient.C
                             if (!savedLocations.contains(location)) {
                                 savedLocations.add(location);
                             }
+
                             savedTeleporterLocations.setTeleporterLocations(savedLocations);
                         });
 
@@ -178,14 +170,12 @@ public class HomeFragment extends Fragment implements GooglePlayServicesClient.C
     public void onResume() {
         super.onResume();
         mapView.onResume();
-        locationClient.connect();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         mapView.onPause();
-//        locationClient.disconnect();
     }
 
     @Override
@@ -222,25 +212,6 @@ public class HomeFragment extends Fragment implements GooglePlayServicesClient.C
                 break;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        try {
-            locationClient.setMockMode(true);
-        } catch (SecurityException e) {
-            Toast.makeText(getActivity(), "Enable mock locations in developer settings", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void onDisconnected() {
-
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
     }
 
     private static GoogleMap initMap(Context context, MapView mapView, Bundle savedInstanceState) {

@@ -40,7 +40,7 @@ public class TeleporterLocationsAdapter extends BaseAdapter {
         TeleporterLocation location = (TeleporterLocation) getItem(position);
         View v = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_1, parent, false);
         TextView name = (TextView) v.findViewById(android.R.id.text1);
-        name.setText(location.getName());
+        name.setText(location.name());
         return v;
     }
 

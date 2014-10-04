@@ -1,14 +1,13 @@
 package com.fourpool.teleporter.app;
 
-import android.app.Activity;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.fourpool.teleporter.app.adapter.TeleporterLocationsAdapter;
@@ -16,15 +15,12 @@ import com.fourpool.teleporter.app.data.SavedTeleporterLocations;
 import com.fourpool.teleporter.app.data.TeleporterLocation;
 import com.fourpool.teleporter.app.fragment.HomeFragment;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.subjects.PublishSubject;
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity {
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mDrawerTitle;
@@ -74,29 +70,21 @@ public class MainActivity extends Activity {
         ListView mDrawerList = (ListView) findViewById(R.id.left_drawer);
         adapter = new TeleporterLocationsAdapter(this, savedTeleporterLocations.getTeleporterLocations());
         mDrawerList.setAdapter(adapter);
-        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TeleporterLocation location = (TeleporterLocation) parent.getItemAtPosition(position);
-                locationChosenFromDrawerStream.onNext(location);
-                mDrawerLayout.closeDrawers();
-            }
+        mDrawerList.setOnItemClickListener((parent, view, position, id) -> {
+            TeleporterLocation location = (TeleporterLocation) parent.getItemAtPosition(position);
+            locationChosenFromDrawerStream.onNext(location);
+            mDrawerLayout.closeDrawers();
         });
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
 
         HomeFragment mHomeFragment = HomeFragment.newInstance();
-        getFragmentManager().beginTransaction().add(R.id.content_frame, mHomeFragment).commit();
+        getSupportFragmentManager().beginTransaction().add(R.id.content_frame, mHomeFragment).commit();
 
         savedTeleporterLocations.getLocationChangedStream()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<List<TeleporterLocation>>() {
-                    @Override
-                    public void call(List<TeleporterLocation> teleporterLocations) {
-                        adapter.updateLocations(teleporterLocations);
-                    }
-                });
+                .subscribe(teleporterLocations -> adapter.updateLocations(teleporterLocations));
     }
 
     @Override

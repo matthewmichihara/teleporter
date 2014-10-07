@@ -43,6 +43,7 @@ import javax.inject.Inject;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import rx.Observable;
+import rx.android.observables.ViewObservable;
 import rx.subjects.PublishSubject;
 
 import static rx.Observable.combineLatest;
@@ -92,12 +93,13 @@ public class HomeFragment extends Fragment {
 
         final GoogleMap map = initMap(getActivity(), mapView, savedInstanceState);
 
-        final Observable<String> searchTextChangedObservable = Helper.textChanged(searchView);
-        final Observable<Prediction> searchSuggestedItemClickObservable = Helper.itemClick(searchView);
+        final Observable<Prediction> searchSuggestedItemClickObservable = Helper.itemClicks(searchView);
 
         final Observable<AutoCompleteResponse> autoCompleteRequestStream
-                = searchTextChangedObservable
+                = ViewObservable.text(searchView)
+                .map(v -> v.getText().toString())
                 .filter(query -> !TextUtils.isEmpty(query))
+                .subscribeOn(mainThread())
                 .flatMap(query -> googlePlacesService.autocomplete(query, "true", "0,0", "20000000"));
 
         final Observable<TeleporterLocation> locationChosenFromSearchStream = searchSuggestedItemClickObservable

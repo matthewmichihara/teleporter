@@ -21,5 +21,6 @@ public abstract class AutoCompleteResponse implements Parcelable {
 
     public abstract List<Prediction> predictions();
 
-    @Nullable public abstract String error_message();
+    @Nullable
+    public abstract String error_message();
 }

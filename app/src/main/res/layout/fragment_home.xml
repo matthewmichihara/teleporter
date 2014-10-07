@@ -23,5 +23,7 @@
         android:background="@android:color/white"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
+        android:inputType="textAutoComplete"
+        android:imeOptions="actionSearch"
         android:layout_marginTop="8dp" />
 </FrameLayout>

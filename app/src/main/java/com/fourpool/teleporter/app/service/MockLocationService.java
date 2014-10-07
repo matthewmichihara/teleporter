@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.fourpool.teleporter.app.MainActivity;
@@ -17,8 +16,6 @@ import com.fourpool.teleporter.app.data.TeleporterLocation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.location.LocationClient;
-
-import hugo.weaving.DebugLog;
 
 public class MockLocationService extends Service implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener {
     private static final String TAG = MockLocationService.class.getSimpleName();
@@ -33,22 +30,18 @@ public class MockLocationService extends Service implements GooglePlayServicesCl
         return null;
     }
 
-    @Override @DebugLog
+    @Override
     public void onCreate() {
         super.onCreate();
-        Log.e("mattm", "here");
+
         locationClient = new LocationClient(this, this, this);
         locationClient.connect();
-
-        Log.e("mattm", "here2");
-
     }
 
-    @Override @DebugLog
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.e("matm", "here 3");
         if (intent == null) return START_STICKY;
-        Log.e("mattm", "here4");
+
         mockLocation = intent.getParcelableExtra(EXTRA_MOCK_LOCATION);
 
         if (locationClient.isConnected()) {
@@ -70,7 +63,6 @@ public class MockLocationService extends Service implements GooglePlayServicesCl
             locationClient.setMockMode(true);
             setMockLocation(mockLocation);
         } catch (SecurityException e) {
-            Log.e("mattm", "security exception ", e);
             Toast.makeText(this, "Enable mock locations in developer settings", Toast.LENGTH_SHORT).show();
         }
     }
@@ -85,7 +77,6 @@ public class MockLocationService extends Service implements GooglePlayServicesCl
 
     }
 
-    @DebugLog
     private void setMockLocation(TeleporterLocation mockLocation) {
         Location location = createMockAndroidLocation(mockLocation);
         locationClient.setMockLocation(location);

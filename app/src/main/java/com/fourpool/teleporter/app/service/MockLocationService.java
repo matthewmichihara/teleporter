@@ -5,7 +5,9 @@ import android.app.Service;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
@@ -44,9 +46,20 @@ public class MockLocationService extends Service implements GooglePlayServicesCl
 
         mockLocation = intent.getParcelableExtra(EXTRA_MOCK_LOCATION);
 
-        if (locationClient.isConnected()) {
-            setMockLocation(mockLocation);
-        }
+        final Handler handler = new Handler(Looper.getMainLooper());
+
+        Runnable setLocationRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (locationClient.isConnected()) {
+                    setMockLocation(mockLocation);
+                }
+
+                handler.postDelayed(this, 1000);
+            }
+        };
+
+        handler.postDelayed(setLocationRunnable, 1000);
 
         return START_STICKY;
     }
